@@ -300,31 +300,25 @@ vec3 cir=mix(mix(vec3(1.,.9,.75),vec3(1.,.6,.45),tw),vec3(.15,.17,.3),nt);c=mix(
 c=mix(c,hor*1.04,exp(-h*12.)*.3);
 c+=(hs(gl_FragCoord.xy)-.5)/255.;gl_FragColor=vec4(c,1.);}`}));
 dome.renderOrder=-2;dome.frustumCulled=false;world.add(dome);
-// Nuage de l'horizon près du soleil couchant — indépendant des autres nuages
-const sunsetCloudU={uT:{value:0},uK:{value:0}};
+// Nuage de l'horizon près du soleil couchant — couche indépendante
+const sunsetCv=document.createElement('canvas');sunsetCv.width=512;sunsetCv.height=180;
+{
+  const x=sunsetCv.getContext('2d');
+  x.clearRect(0,0,512,180);
+  const puffs=[[55,105,48],[105,88,62],[170,104,58],[235,82,68],[305,102,60],[365,86,52],[425,106,58],[470,95,42]];
+  for(const [px,py,r] of puffs){
+    const g=x.createRadialGradient(px,py,0,px,py,r);
+    g.addColorStop(0,'rgba(255,225,205,.72)');
+    g.addColorStop(.55,'rgba(225,185,175,.48)');
+    g.addColorStop(1,'rgba(180,140,150,0)');
+    x.fillStyle=g;x.beginPath();x.arc(px,py,r,0,Math.PI*2);x.fill();
+  }
+}
+const sunsetTex=new THREE.CanvasTexture(sunsetCv);
+sunsetTex.needsUpdate=true;
 const sunsetCloud=new THREE.Mesh(
-  new THREE.PlaneGeometry(1800,360),
-  new THREE.ShaderMaterial({
-    uniforms:sunsetCloudU,
-    transparent:true,
-    depthWrite:false,
-    side:THREE.DoubleSide,
-    fog:false,
-    vertexShader:'varying vec2 vU;void main(){vU=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',
-    fragmentShader:`varying vec2 vU;uniform float uT,uK;
-      float h(vec2 p){return fract(sin(dot(p,vec2(41.7,113.1)))*43758.5453);}
-      float n(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);
-        return mix(mix(h(i),h(i+vec2(1.,0.)),f.x),mix(h(i+vec2(0.,1.)),h(i+vec2(1.,1.)),f.x),f.y);}
-      float fb(vec2 p){float a=.5,s=0.;for(int i=0;i<4;i++){s+=a*n(p);p=p*2.03+vec2(4.2,7.1);a*=.5;}return s;}
-      void main(){
-        float sunset=1.-smoothstep(.35,.9,uK);
-        float band=smoothstep(.0,.28,vU.y)*(1.-smoothstep(.62,1.,vU.y));
-        float q=fb(vec2(vU.x*3.2+uT*.012,vU.y*5.));
-        float a=smoothstep(.48,.68,q)*band*sunset*.72;
-        vec3 c=mix(vec3(.95,.58,.4),vec3(.35,.27,.34),uK);
-        gl_FragColor=vec4(c,a);
-      }`
-  })
+  new THREE.PlaneGeometry(260,92),
+  new THREE.MeshBasicMaterial({map:sunsetTex,transparent:true,depthWrite:false,side:THREE.DoubleSide,blending:THREE.NormalBlending})
 );
 world.add(sunsetCloud);
 
@@ -434,6 +428,9 @@ function sky(dt){
  moonS.material.opacity=vis;moonG.material.opacity=vis*.6;moonS.material.color.setRGB(1,.82+.18*ss(em,0,.35),.62+.38*ss(em,0,.35));
  starU.uA.value=ss(K,.65,.95);starU.uT.value=T;
  dome.position.set(P.x,0,P.z);stars.position.copy(dome.position);stars.quaternion.setFromAxisAngle(POLE,T*.035);
+  // Le nuage d'horizon reste très loin devant le joueur, près du soleil.
+  sunsetCloud.position.set(P.x+sd.x*900,75,P.z+sd.z*900);
+  sunsetCloud.rotation.y=Math.atan2(-sd.z,sd.x);
 }
 
 const mkRT=()=>renderer.capabilities.isWebGL2?new THREE.WebGLMultisampleRenderTarget(1,1):new THREE.WebGLRenderTarget(1,1);
