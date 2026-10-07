@@ -19,13 +19,15 @@ canvas{display:block}
 <script>
 const bgMusic=document.getElementById("bgMusic");
 
+let musicOn=false;bgMusic.volume=.7;
+const MEV=['touchend','pointerup','pointerdown','click','keydown','touchstart'];
 function startMusic(){
-    bgMusic.play().catch(()=>{});
+    if(musicOn)return;
+    const p=bgMusic.play();
+    if(p&&p.then)p.then(()=>{musicOn=true;MEV.forEach(ev=>removeEventListener(ev,startMusic,true))}).catch(()=>{});
 }
-
-addEventListener('pointerdown',startMusic,{once:true});
-addEventListener('touchstart',startMusic,{once:true});
-addEventListener('keydown',startMusic,{once:true});
+MEV.forEach(ev=>addEventListener(ev,startMusic,{capture:true,passive:true}));
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&musicOn)bgMusic.play().catch(()=>{})});
 </script>
 <div id="v"></div><div id="j"><i></i></div><div id="k"><i></i></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -247,19 +249,43 @@ c=mix(c,hor*1.04,exp(-h*12.)*.3);
 c+=(hs(gl_FragCoord.xy)-.5)/255.;gl_FragColor=vec4(c,1.);}`}));
 dome.renderOrder=-2;dome.frustumCulled=false;world.add(dome);
 
-const N=10,sp=new Float32Array(N*3),sa=new Float32Array(N);
-for(let i=0;i<N;i++){const a=Math.PI+.17+(R()-.5)*1.7,el=.07+R()*.3,c=Math.cos(el);sp.set([Math.sin(a)*c*1400,Math.sin(el)*1400,-Math.cos(a)*c*1400],i*3);sa[i]=.5+R()*.5}
+const N=1100,sp=new Float32Array(N*3),sa=new Float32Array(N);
+for(let i=0;i<N;i++){const u=R()*6.283,v=R()*2-1,q=Math.sqrt(1-v*v);sp.set([Math.cos(u)*q*1400,v*1400,Math.sin(u)*q*1400],i*3);sa[i]=Math.pow(R(),2.2)*.8+.2}
 const sg=new THREE.BufferGeometry();sg.setAttribute('position',new THREE.BufferAttribute(sp,3));sg.setAttribute('aS',new THREE.BufferAttribute(sa,1));
-const starU={uA:{value:0},uT:{value:0},uPx:{value:2}};
+const starU={uA:{value:0},uT:{value:0},uPx:{value:2}},POLE=new THREE.Vector3(.35,.8,-.45).normalize();
 const stars=new THREE.Points(sg,new THREE.ShaderMaterial({uniforms:starU,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,
-vertexShader:'attribute float aS;uniform float uT,uPx,uA;varying float vA;void main(){vA=aS*(.4+.6*uA)*(.75+.25*sin(uT*(1.+aS*2.)+aS*50.));gl_PointSize=uPx*(2.+aS*2.);gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',
-fragmentShader:'varying float vA;void main(){float r=length(gl_PointCoord-.5)*2.;gl_FragColor=vec4(vec3(1.,.96,.9)*vA*smoothstep(1.,.1,r),1.);}'}));
-stars.frustumCulled=false;world.add(stars);
+vertexShader:'attribute float aS;uniform float uT,uPx,uA;varying float vA;varying vec3 vC;void main(){float el=abs((modelMatrix*vec4(position,1.)).y)/1400.;vA=aS*uA*(.7+.3*sin(uT*(1.+aS*2.)+aS*50.))*smoothstep(0.,.12,el);vC=mix(vec3(.75,.88,1.),vec3(1.,.9,.72),fract(aS*37.));gl_PointSize=uPx*(1.4+aS*2.4);gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',
+fragmentShader:'varying float vA;varying vec3 vC;void main(){float r=length(gl_PointCoord-.5)*2.;gl_FragColor=vec4(vC*vA*smoothstep(1.,.1,r),1.);}'}));
+stars.frustumCulled=false;stars.renderOrder=-3;world.add(stars);
 
-function spr(draw,add,px){const c=document.createElement('canvas');c.width=c.height=128;draw(c.getContext('2d'));const t=new THREE.CanvasTexture(c);
+function spr(draw,add,px,sz){const c=document.createElement('canvas');c.width=c.height=sz||256;draw(c.getContext('2d'));const t=new THREE.CanvasTexture(c);
  if(px)t.magFilter=THREE.NearestFilter;const s=new THREE.Sprite(new THREE.SpriteMaterial({map:t,fog:false,depthWrite:false,transparent:true,blending:add?THREE.AdditiveBlending:THREE.NormalBlending}));
  s.frustumCulled=false;world.add(s);return s}
-const moonS=spr(x=>{x.fillStyle='#e8edf8';x.beginPath();x.arc(64,64,36,0,6.283);x.fill();x.fillStyle='#c3cbe0';x.beginPath();x.arc(52,54,8,0,6.283);x.arc(76,70,10,0,6.283);x.fill()},0);moonS.scale.set(60,60,1);
+const moonS=spr(x=>{const C=128,Rr=104;x.save();x.beginPath();x.arc(C,C,Rr,0,6.283);x.clip();
+ let g=x.createRadialGradient(C-20,C-20,10,C,C,Rr);g.addColorStop(0,'#f7f3e6');g.addColorStop(1,'#d3cdbb');x.fillStyle=g;x.fillRect(0,0,256,256);
+ const mare=[[100,92,38],[140,80,30],[118,138,44],[80,128,26],[150,130,26],[128,60,20]];
+ for(const m of mare){g=x.createRadialGradient(m[0],m[1],2,m[0],m[1],m[2]);g.addColorStop(0,'rgba(110,110,125,.55)');g.addColorStop(1,'rgba(110,110,125,0)');x.fillStyle=g;x.fillRect(0,0,256,256)}
+ for(let i=0;i<46;i++){const a=R()*6.283,d=Math.sqrt(R())*Rr*.9,cx=C+Math.cos(a)*d,cy=C+Math.sin(a)*d,r=2+R()*7;x.strokeStyle='rgba(255,255,245,.35)';x.lineWidth=1.2;x.beginPath();x.arc(cx,cy,r,0,6.283);x.stroke();x.fillStyle='rgba(90,90,100,.18)';x.beginPath();x.arc(cx+1,cy+1,r*.8,0,6.283);x.fill()}
+ g=x.createRadialGradient(C-45,C-10,50,C+25,C+5,Rr*1.15);g.addColorStop(0,'rgba(5,8,25,0)');g.addColorStop(.7,'rgba(5,8,25,.25)');g.addColorStop(1,'rgba(5,8,25,.8)');x.fillStyle=g;x.fillRect(0,0,256,256);x.restore()},0);moonS.scale.set(95,95,1);moonS.renderOrder=-2;
+const moonG=spr(x=>{const g=x.createRadialGradient(128,128,20,128,128,128);g.addColorStop(0,'rgba(190,210,255,.5)');g.addColorStop(.3,'rgba(150,175,235,.16)');g.addColorStop(1,'rgba(120,150,230,0)');x.fillStyle=g;x.fillRect(0,0,256,256)},1);moonG.scale.set(520,520,1);moonG.renderOrder=-2.5;
+
+// nuages 3D : gros, proches, éclairés par le soleil/la lune, répétés à l'infini autour du joueur
+const NC=22,PP=42,cn=NC*PP,cC=new Float32Array(cn*3),cO=new Float32Array(cn*3),cN=new Float32Array(cn*3),cS=new Float32Array(cn*2);
+for(let c=0;c<NC;c++){const an=R()*6.283,rd=rr(130,950),cx=Math.cos(an)*rd,cz=Math.sin(an)*rd,cy=rr(65,150),Wd=rr(80,180),Hd=rr(20,40);
+ for(let p=0;p<PP;p++){const i=c*PP+p,u=R()*6.283,v=R()*2-1,q=Math.sqrt(1-v*v),f=Math.cbrt(R()),dx=Math.cos(u)*q,dz=Math.sin(u)*q;
+  let oy=v*Hd*f;if(v<0)oy*=.35;
+  cC.set([cx,cy,cz],i*3);cO.set([dx*Wd*f,oy,dz*Wd*.6*f],i*3);const nl=Math.hypot(dx,v,dz)||1;cN.set([dx/nl,v/nl,dz/nl],i*3);cS.set([rr(38,75)*(1.15-f*.4),R()],i*2)}}
+const cg=new THREE.InstancedBufferGeometry(),qd=new THREE.PlaneGeometry(1,1);cg.setIndex(qd.index);cg.setAttribute('position',qd.attributes.position);
+cg.setAttribute('aC',new THREE.InstancedBufferAttribute(cC,3));cg.setAttribute('aO',new THREE.InstancedBufferAttribute(cO,3));cg.setAttribute('aN',new THREE.InstancedBufferAttribute(cN,3));cg.setAttribute('aS',new THREE.InstancedBufferAttribute(cS,2));cg.instanceCount=cn;
+const cloudU={uP:{value:new THREE.Vector2()},uSun:{value:new THREE.Vector3(0,1,0)},uL:{value:new THREE.Color(1,1,1)},uSh:{value:new THREE.Color(.6,.65,.75)},uH:{value:1000}};
+const clouds=new THREE.Mesh(cg,new THREE.ShaderMaterial({uniforms:cloudU,transparent:true,depthWrite:false,side:THREE.DoubleSide,
+vertexShader:`uniform vec2 uP;uniform vec3 uSun,uL,uSh;uniform float uH;attribute vec3 aC,aO,aN;attribute vec2 aS;varying vec3 vC;varying float vA;varying vec2 vU;
+void main(){vec3 c=aC;c.xz=mod(c.xz-uP+uH,2.*uH)-uH+uP;vec4 mv=modelViewMatrix*vec4(c+aO,1.);mv.xy+=position.xy*aS.x;gl_Position=projectionMatrix*mv;
+float l=clamp(dot(aN,uSun)*.65+.5,0.,1.);l=l*l*(3.-2.*l);vec3 vd=normalize(vec3(c.x-uP.x,c.y-1.7,c.z-uP.y));
+vC=mix(uSh,uL,l)+uL*pow(max(dot(vd,uSun),0.),5.)*.45;
+vA=(1.-smoothstep(uH*.6,uH,length(c.xz-uP)))*smoothstep(8.,45.,length(mv.xyz))*.6;vU=position.xy*2.;}`,
+fragmentShader:'varying vec3 vC;varying float vA;varying vec2 vU;void main(){float r=dot(vU,vU);if(r>1.)discard;float a=pow(1.-r,1.5)*vA;if(a<.01)discard;gl_FragColor=vec4(vC,a);}'}));
+clouds.frustumCulled=false;clouds.renderOrder=-1;world.add(clouds);
 
 // lumières & sol miroir
 const amb=new THREE.AmbientLight(0xffffff,.8),sunL=new THREE.DirectionalLight(0xffd9a0,1.6),moonL=new THREE.DirectionalLight(0x8fa8ff,0);const fillL=new THREE.DirectionalLight(0xffe0b0,.7);fillL.position.set(.3,.4,1);scene.add(amb,sunL,moonL,fillL);
@@ -325,19 +351,28 @@ function step(dt){
 const cA=new THREE.Color(1,.88,.62),cT=new THREE.Color(.95,.4,.2),cB=new THREE.Color(.05,.07,.17),hor=new THREE.Color(),sd=new THREE.Vector3(),md=new THREE.Vector3();
 const aA=new THREE.Color(1,.88,.68),aB=new THREE.Color(.13,.16,.3);
 const put=(o,v,d)=>o.position.set(P.x+v.x*d,v.y*d,P.z+v.z*d);
+const KF=[[0,.13,0],[10,-.1,.45],[20,-.45,1],[40,-.45,1],[44,-.15,.55],[48,.1,.05],[54,.38,0],[60,.13,0]],
+MK=[[0,-.3],[8,-.12],[14,.12],[26,.62],[34,.78],[44,.4],[52,.02],[56,-.25],[60,-.3]],CY=60;
+function kf(a,t,i){for(let n=0;n<a.length-1;n++)if(t<=a[n+1][0]){const f=(t-a[n][0])/(a[n+1][0]-a[n][0]);return M.lerp(a[n][i],a[n+1][i],f)}return a[a.length-1][i]}
+const cLd=new THREE.Color(1,.97,.9),cLt=new THREE.Color(1,.55,.3),cLn=new THREE.Color(.2,.24,.42),cSd=new THREE.Color(.62,.68,.8),cSt=new THREE.Color(.42,.3,.45),cSn=new THREE.Color(.04,.05,.1),cd=new THREE.Vector3();
 function sky(dt){
- T+=dt;const k=Math.min(T/240,1),e=M.lerp(.07,-.6,k*k*(3-2*k)),K=ss(k,.08,.8);
- sd.set(Math.sin(.17)*Math.cos(e),Math.sin(e),-Math.cos(.17)*Math.cos(e));
- md.set(-.5,.2+.6*K,-.7).normalize();
+ T+=dt;const t=T%CY,e=kf(KF,t,1),K=kf(KF,t,2);
+ const az=t<20?.17:t<40?M.lerp(.17,-2,(t-20)/20):M.lerp(-2,.17,(t-40)/20);
+ sd.set(Math.sin(az)*Math.cos(e),Math.sin(e),-Math.cos(az)*Math.cos(e));
+ const em=kf(MK,t,1),am=Math.PI+1.17-2.2*M.clamp((t-10)/46,0,1);
+ md.set(Math.sin(am)*Math.cos(em),Math.sin(em),-Math.cos(am)*Math.cos(em));
  skyU.uSun.value.copy(sd);skyU.uK.value=K;skyU.uT.value=T;leafU.uT.value=T;leafU.uK.value=K;
- const up=ss(sd.y,-.15,.12);
- hor.copy(cA).lerp(cT,ss(K,0,.45)).lerp(cB,ss(K,.35,1));scene.fog.color.copy(hor);renderer.setClearColor(hor);
- fillL.intensity=.7*(1-ss(K,.3,.9));sunL.intensity=1.8*up;moonL.intensity=.6*ss(K,.3,.9);amb.color.copy(aA).lerp(aB,K);amb.intensity=.95-.35*K;
+ const up=ss(sd.y,-.15,.12),tw=ss(K,0,.45),nt=ss(K,.35,1);
+ hor.copy(cA).lerp(cT,tw).lerp(cB,nt);scene.fog.color.copy(hor);renderer.setClearColor(hor);
+ fillL.intensity=.7*(1-ss(K,.3,.9));sunL.intensity=1.8*up;moonL.intensity=.6*ss(K,.3,.9)*ss(em,-.05,.15);amb.color.copy(aA).lerp(aB,K);amb.intensity=.95-.35*K;
  sunL.position.copy(sd).multiplyScalar(100);moonL.position.copy(md).multiplyScalar(100);
- put(moonS,md,1200);
- moonS.material.opacity=ss(K,.35,.8);
- starU.uA.value=ss(k,.05,.6);starU.uT.value=T;
- dome.position.set(P.x,0,P.z);stars.position.copy(dome.position);
+ const vis=ss(K,.3,.75)*ss(em,-.08,.1);
+ put(moonS,md,1200);put(moonG,md,1190);
+ moonS.material.opacity=vis;moonG.material.opacity=vis*.6;moonS.material.color.setRGB(1,.82+.18*ss(em,0,.35),.62+.38*ss(em,0,.35));
+ starU.uA.value=ss(K,.65,.95);starU.uT.value=T;
+ dome.position.set(P.x,0,P.z);stars.position.copy(dome.position);stars.quaternion.setFromAxisAngle(POLE,T*.035);
+ cloudU.uP.value.set(P.x,P.z);cd.copy(sd).lerp(md,nt).normalize();cloudU.uSun.value.copy(cd);
+ cloudU.uL.value.copy(cLd).lerp(cLt,tw).lerp(cLn,nt);cloudU.uSh.value.copy(cSd).lerp(cSt,tw).lerp(cSn,nt);
 }
 
 const mkRT=()=>renderer.capabilities.isWebGL2?new THREE.WebGLMultisampleRenderTarget(1,1):new THREE.WebGLRenderTarget(1,1);
