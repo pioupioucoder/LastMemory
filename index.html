@@ -12,14 +12,20 @@ canvas{display:block}
 #j i,#k i{position:absolute;left:35px;top:35px;width:50px;height:50px;border-radius:50%;background:rgba(255,255,255,.45)}
 </style></head><body>
 
-  <audio id="bgMusic" loop>
+ <audio id="bgMusic" loop preload="auto">
     <source src="music.mp3" type="audio/mpeg">
 </audio>
 
 <script>
-document.addEventListener("click", function() {
-    document.getElementById("bgMusic").play();
-}, { once: true });
+const bgMusic=document.getElementById("bgMusic");
+
+function startMusic(){
+    bgMusic.play().catch(()=>{});
+}
+
+addEventListener('pointerdown',startMusic,{once:true});
+addEventListener('touchstart',startMusic,{once:true});
+addEventListener('keydown',startMusic,{once:true});
 </script>
 <div id="v"></div><div id="j"><i></i></div><div id="k"><i></i></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
