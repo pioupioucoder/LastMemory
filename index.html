@@ -338,7 +338,6 @@ const put=(o,v,d)=>o.position.set(P.x+v.x*d,v.y*d,P.z+v.z*d);
 const KF=[[0,.13,0],[10,-.1,.45],[20,-.45,1],[40,-.45,1],[44,-.15,.55],[48,.1,.05],[54,.38,0],[60,.13,0]],
 MK=[[0,-.3],[8,-.12],[14,.12],[26,.62],[34,.78],[44,.4],[52,.02],[56,-.25],[60,-.3]],CY=60;
 function kf(a,t,i){for(let n=0;n<a.length-1;n++)if(t<=a[n+1][0]){const f=(t-a[n][0])/(a[n+1][0]-a[n][0]);return M.lerp(a[n][i],a[n+1][i],f)}return a[a.length-1][i]}
-const cLd=new THREE.Color(1,.97,.9),cLt=new THREE.Color(1,.55,.3),cLn=new THREE.Color(.2,.24,.42),cSd=new THREE.Color(.62,.68,.8),cSt=new THREE.Color(.42,.3,.45),cSn=new THREE.Color(.04,.05,.1),cd=new THREE.Vector3();
 function sky(dt){
  T+=dt;const t=T%CY,e=kf(KF,t,1),K=kf(KF,t,2);
  const az=t<20?.17:t<40?M.lerp(.17,-2,(t-20)/20):M.lerp(-2,.17,(t-40)/20);
@@ -355,8 +354,6 @@ function sky(dt){
  moonS.material.opacity=vis;moonG.material.opacity=vis*.6;moonS.material.color.setRGB(1,.82+.18*ss(em,0,.35),.62+.38*ss(em,0,.35));
  starU.uA.value=ss(K,.65,.95);starU.uT.value=T;
  dome.position.set(P.x,0,P.z);stars.position.copy(dome.position);stars.quaternion.setFromAxisAngle(POLE,T*.035);
- cloudU.uP.value.set(P.x,P.z);cd.copy(sd).lerp(md,nt).normalize();cloudU.uSun.value.copy(cd);
- cloudU.uL.value.copy(cLd).lerp(cLt,tw).lerp(cLn,nt);cloudU.uSh.value.copy(cSd).lerp(cSt,tw).lerp(cSn,nt);
 }
 
 const mkRT=()=>renderer.capabilities.isWebGL2?new THREE.WebGLMultisampleRenderTarget(1,1):new THREE.WebGLRenderTarget(1,1);
