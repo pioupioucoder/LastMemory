@@ -128,7 +128,7 @@ const en=TF.normals[i0].clone().normalize();
 const eb=TF.binormals[i0].clone().normalize();
 
 engrave.position.copy(ep);
-engrave.position.add(en.multiplyScalar(.9));
+engrave.position.add(en.multiplyScalar(1.3));
 
 engrave.quaternion.setFromUnitVectors(
   new THREE.Vector3(0,0,1),
