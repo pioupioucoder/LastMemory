@@ -69,75 +69,36 @@ const W=2048,HH=1024,bc=document.createElement('canvas'),bu=document.createEleme
 const sh=(c,col,dx,dy)=>{
   c.save();
 
-  c.translate(W*.5+dx,(1-.75*tg0/tc0)*HH+dy);
+  c.translate(
+    W*.5+dx,
+    (1-.75*tg0/tc0)*HH+dy
+  );
 
-  /* Gravure droite : aucune rotation ni déformation */
   c.scale(flip?-1:1,1);
 
+  c.textAlign='center';
+  c.textBaseline='middle';
+  c.fillStyle=col;
 
+  c.font='bold 105px Georgia,"Times New Roman",serif';
+  c.fillText('I',0,-105);
+
+  c.font='bold 105px Georgia,"Times New Roman",serif';
+  c.fillText('♥',0,0);
+
+  c.font='bold 78px Georgia,"Times New Roman",serif';
+  c.fillText('Étoile',0,105);
 
   c.restore();
 };
 
 sh(x,'rgba(255,225,180,.35)',2,3);
-sh(x,'rgba(95,72,50,.95)',0,0);
+sh(x,'rgba(45,30,20,.95)',0,0);
 sh(y,'rgb(5,5,5)',0,0);}
 const tg=new THREE.BufferGeometry();tg.setAttribute('position',new THREE.Float32BufferAttribute(tp,3));tg.setAttribute('uv',new THREE.Float32BufferAttribute(tu,2));tg.setIndex(ti);tg.computeVertexNormals();
 const tm=new THREE.CanvasTexture(bc),bm=new THREE.CanvasTexture(bu);tm.wrapS=bm.wrapS=THREE.RepeatWrapping;
 const bark=new THREE.Mesh(tg,new THREE.MeshPhongMaterial({map:tm,bumpMap:bm,bumpScale:2.5,shininess:5,specular:0x111111,side:THREE.DoubleSide}));bark.frustumCulled=false;treeG.add(bark);
-// Gravure droite indépendante de la forme du tronc
-const engraveCanvas=document.createElement('canvas');
-engraveCanvas.width=512;
-engraveCanvas.height=512;
 
-{
-  const c=engraveCanvas.getContext('2d');
-
-  c.clearRect(0,0,512,512);
-  c.textAlign='center';
-  c.textBaseline='middle';
-
-  c.fillStyle='rgba(25,18,13,.95)';
-
-  c.font='bold 100px Georgia,"Times New Roman",serif';
-  c.fillText('I',256,125);
-
-  c.font='bold 100px Georgia,"Times New Roman",serif';
-  c.fillText('♥',256,255);
-
-  c.font='bold 78px Georgia,"Times New Roman",serif';
-  c.fillText('Étoile',256,385);
-}
-
-const engraveTex=new THREE.CanvasTexture(engraveCanvas);
-
-const engraveMat=new THREE.MeshBasicMaterial({
-  map:engraveTex,
-  transparent:true,
-  depthWrite:false,
-  side:THREE.DoubleSide
-});
-
-const engrave=new THREE.Mesh(
-  new THREE.PlaneGeometry(2.2,2.2),
-  engraveMat
-);
-
-const ep=trunk.getPoint(tg0);
-const en=TF.normals[i0].clone().normalize();
-const eb=TF.binormals[i0].clone().normalize();
-
-engrave.position.copy(ep);
-engrave.position.add(en.multiplyScalar(1.3));
-
-engrave.quaternion.setFromUnitVectors(
-  new THREE.Vector3(0,0,1),
-  en
-);
-
-engrave.position.y+=.15;
-
-treeG.add(engrave);
 const lg=new THREE.BufferGeometry();lg.setAttribute('position',new THREE.Float32BufferAttribute(lp,3));lg.setAttribute('aC',new THREE.Float32BufferAttribute(lc,3));
 lg.setAttribute('aS',new THREE.Float32BufferAttribute(ls,1));lg.setAttribute('aW',new THREE.Float32BufferAttribute(lw,1));lg.setAttribute('aP',new THREE.Float32BufferAttribute(lph,1));
 const leafU={uT:{value:0},uK:{value:0},uS:{value:700}};
