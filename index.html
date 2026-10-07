@@ -123,15 +123,19 @@ const engrave=new THREE.Mesh(
   engraveMat
 );
 
-// position sur la partie basse du tronc
 const ep=trunk.getPoint(tg0);
 const en=TF.normals[i0].clone().normalize();
+const eb=TF.binormals[i0].clone().normalize();
 
 engrave.position.copy(ep);
-engrave.position.add(en.multiplyScalar(.78));
+engrave.position.add(en.multiplyScalar(.9));
 
-engrave.rotation.y=Math.atan2(en.x,en.z);
-engrave.rotation.x=0;
+engrave.quaternion.setFromUnitVectors(
+  new THREE.Vector3(0,0,1),
+  en
+);
+
+engrave.position.y+=.15;
 
 treeG.add(engrave);
 const lg=new THREE.BufferGeometry();lg.setAttribute('position',new THREE.Float32BufferAttribute(lp,3));lg.setAttribute('aC',new THREE.Float32BufferAttribute(lc,3));
