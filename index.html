@@ -1,7 +1,16 @@
-<!DOCTYPE html><html lang="fr"><head><img src="logo.png" alt="Logo Étoile"><meta charset="utf-8">
+<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <title>Monde miroir</title>
 <style>
+  #siteLogo {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    width: 120px;
+    height: auto;
+    z-index: 1000;
+    pointer-events: none;
+}
 :root{--bg:#000;box-sizing:border-box}
 html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);touch-action:none;user-select:none;-webkit-user-select:none}
 canvas{display:block}
@@ -9,6 +18,7 @@ canvas{display:block}
 #j,#k{position:fixed;width:120px;height:120px;margin:-60px 0 0 -60px;border-radius:50%;border:2px solid rgba(255,255,255,.4);background:rgba(255,255,255,.08);opacity:.45;display:none;pointer-events:none}
 #j i,#k i{position:absolute;left:35px;top:35px;width:50px;height:50px;border-radius:50%;background:rgba(255,255,255,.45)}
 </style></head><body>
+  <img src="logo.png" alt="Logo Étoile" id="siteLogo">
   <audio id="bgMusic" loop>
     <source src="music.mp3" type="audio/mpeg">
 </audio>
