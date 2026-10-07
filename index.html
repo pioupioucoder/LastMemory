@@ -66,21 +66,34 @@ const W=2048,HH=1024,bc=document.createElement('canvas'),bu=document.createEleme
 {const x=bc.getContext('2d'),y=bu.getContext('2d');x.fillStyle='rgb(48,40,35)';x.fillRect(0,0,W,HH);y.fillStyle='rgb(150,150,150)';y.fillRect(0,0,W,HH);
  for(let i=0;i<1400;i++){const px=R()*W,w=1+R()*4,l=60+R()*500,py=R()*HH,g=R()<.5;
   for(const o of[-W,0,W]){x.fillStyle=g?'rgba(90,78,66,.35)':'rgba(10,8,6,.35)';x.fillRect(px+o,py,w,l);y.fillStyle=g?'rgba(200,200,200,.5)':'rgba(60,60,60,.5)';y.fillRect(px+o,py,w,l)}}
- const sh=(c,col,dx,dy)=>{c.save();c.translate(W*.5+dx,(1-.75*tg0/tc0)*HH+dy);c.scale(1.51*(flip?-1:1),1);c.rotate(-.02);c.translate(-22,0);c.fillStyle=c.strokeStyle=col;c.lineCap=c.lineJoin='round';
-  c.lineWidth=15;c.beginPath();c.moveTo(-215,-42);c.lineTo(-175,-42);c.moveTo(-195,-42);c.lineTo(-195,42);c.moveTo(-215,42);c.lineTo(-175,42);c.stroke();
-  c.beginPath();for(let t=0;t<=6.29;t+=.08){const px=-95+Math.pow(Math.sin(t),3)*34,py=4-(13*Math.cos(t)-5*Math.cos(2*t)-2*Math.cos(3*t)-Math.cos(4*t))*2.7;t?c.lineTo(px,py):c.moveTo(px,py)}c.closePath();c.fill();
-  c.font='bold 104px Georgia,"Times New Roman",serif';
-c.textBaseline='middle';
-c.textAlign='left';
+const sh=(c,col,dx,dy)=>{
+  c.save();
 
-// Gravure lisible et presque horizontale
-c.save();
-c.globalAlpha=.9;
-c.fillStyle=col;
-c.shadowColor='rgba(255,235,200,.35)';
-c.shadowBlur=2;
-c.fillText('Étoile',-40,4);
-c.restore();c.restore()};
+  c.translate(W*.5+dx,(1-.75*tg0/tc0)*HH+dy);
+
+  /* Gravure droite : aucune rotation ni déformation */
+  c.scale(flip?-1:1,1);
+
+  c.fillStyle=col;
+  c.strokeStyle=col;
+  c.lineCap=c.lineJoin='round';
+
+  /* I */
+  c.font='bold 110px Georgia,"Times New Roman",serif';
+  c.textBaseline='middle';
+  c.textAlign='center';
+  c.fillText('I',0,-100);
+
+  /* ♥ */
+  c.fillText('♥',0,0);
+
+  /* Étoile */
+  c.font='bold 90px Georgia,"Times New Roman",serif';
+  c.fillText('Étoile',0,100);
+
+  c.restore();
+};
+
 sh(x,'rgba(255,225,180,.35)',2,3);
 sh(x,'rgba(95,72,50,.95)',0,0);
 sh(y,'rgb(5,5,5)',0,0);}
