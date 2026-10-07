@@ -202,6 +202,50 @@ const bark=new THREE.Mesh(
 bark.frustumCulled=false;
 treeG.add(bark);
 
+// Gravure lumineuse indépendante de l'éclairage jour/nuit
+const glowCv=document.createElement('canvas');
+glowCv.width=W; glowCv.height=HH;
+{
+ const g=glowCv.getContext('2d');
+ g.clearRect(0,0,W,HH);
+ g.save();
+
+ const cx=W*.5;
+ const cy=(1-.75*tg0/tc0)*HH;
+ g.translate(cx,cy);
+
+ const p1=trunk.getPoint(Math.max(0,tg0-.035));
+ const p2=trunk.getPoint(Math.min(1,tg0+.035));
+ g.rotate(-Math.atan2(p2.x-p1.x,p2.y-p1.y));
+
+ g.textAlign='center';
+ g.textBaseline='middle';
+ g.shadowColor='rgba(255,190,105,.9)';
+ g.shadowBlur=18;
+ g.fillStyle='rgba(255,220,160,.92)';
+
+ g.font='bold 105px Georgia,"Times New Roman",serif';
+ g.fillText('I',0,-105);
+ g.fillText('♥',0,0);
+
+ g.font='bold 78px Georgia,"Times New Roman",serif';
+ g.fillText('Étoile',0,105);
+
+ g.restore();
+}
+const glowTx=new THREE.CanvasTexture(glowCv);
+const glowMat=new THREE.MeshBasicMaterial({
+ map:glowTx,
+ transparent:true,
+ depthWrite:false,
+ blending:THREE.AdditiveBlending,
+ side:THREE.DoubleSide
+});
+const glowBark=new THREE.Mesh(tg,glowMat);
+glowBark.frustumCulled=false;
+glowBark.renderOrder=2;
+treeG.add(glowBark);
+
 
 const lg=new THREE.BufferGeometry();lg.setAttribute('position',new THREE.Float32BufferAttribute(lp,3));lg.setAttribute('aC',new THREE.Float32BufferAttribute(lc,3));
 lg.setAttribute('aS',new THREE.Float32BufferAttribute(ls,1));lg.setAttribute('aW',new THREE.Float32BufferAttribute(lw,1));lg.setAttribute('aP',new THREE.Float32BufferAttribute(lph,1));
